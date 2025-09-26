@@ -8,7 +8,6 @@ import torch
 
 def predict_single (model, image, device, transform = None, labels = None):
 
-
     original_image = Image.open(image)
 
     if transform is None:

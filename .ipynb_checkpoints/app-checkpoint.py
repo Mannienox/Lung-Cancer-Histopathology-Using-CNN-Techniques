@@ -4,13 +4,12 @@ from torch import nn
 from torchvision.models import resnet50, ResNet50_Weights
 from PIL import Image
 import io
-import google.generativeai as genai
 
 
 # --- Streamlit UI Layout ---
 st.set_page_config(
-    page_title="Maize Disease Detector",
-    page_icon="🌽",
+    page_title="Lung Disease Detector",
+    page_icon="🧑‍⚕️",
     layout="centered"
 )
 
@@ -22,24 +21,13 @@ if 'pred_result' not in st.session_state:
     st.session_state.pred_result = None
 if 'prob_result' not in st.session_state:
     st.session_state.prob_result = None
-if 'gemini_clicked' not in st.session_state: # To control Gemini recommendation display
-    st.session_state.gemini_clicked = False
 
 
 # --- Configuration ---
-MODEL_PATH = 'Model/resnet50_10_epochs_adam_0_001.pth'
-LABELS = ['Blight', 'Common_Rust', 'Gray_Leaf_Spot', 'Healthy']
+MODEL_PATH = 'Model/resnet50_7_epochs_adam_lr_0_001.pth'
+LABELS = ['lung_aca', 'lung_n', 'lung_scc']
 NUM_CLASSES = len(LABELS)
 device = "cpu"
-
-# --- Configure Gemini API (using Streamlit secrets) ---
-gemini_model = None
-try:
-    gemini_api_key = "AIzaSyCtDAZOChhirBWa1GZ62vxedmGteMeOh_A"
-    genai.configure(api_key=gemini_api_key)
-    gemini_model = genai.GenerativeModel('gemini-1.5-flash')
-except Exception as e:
-    pass
 
 
 # --- Model Loading and Caching ---
@@ -50,12 +38,18 @@ def load_and_prepare_model(model_path, num_classes):
 
     for param in model.parameters():
         param.requires_grad = False
+    
 
     num_ftrs = model.fc.in_features
     model.fc = nn.Sequential(
-        nn.Dropout(p=0.2, inplace=False), # Removed inplace=True
-        nn.Linear(in_features=num_ftrs, out_features=num_classes, bias=True)
-    ).to(device)
+                        nn.Linear(num_ftrs, 512),       # First linear layer to a hidden size of 512
+                        nn.ReLU(),                         # Non-linear activation function
+                        nn.Dropout(p=0.2),                 # Dropout for regularization to prevent overfitting
+                        nn.Linear(512, len(LABELS))        # Final linear layer to output the number of classes
+                ).to(device)
+    
+    for param in model.layer4.parameters():
+        param.requires_grad = True
 
     model.load_state_dict(torch.load(model_path, map_location='cpu'))
     model.eval()
@@ -79,8 +73,8 @@ def predict_single(model, image, transform, labels):
     return predicted_class, predicted_prob.item()
 
 
-st.markdown("<h1 style='text-align: center;'>🌽 Maize Disease Predictor 🌽</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center;'>Upload a maize leaf image and get an instant disease diagnosis.</p>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center;'> Lung Disease Predictor </h1>", unsafe_allow_html=True)
+#st.markdown("<p style='text-align: center;'>Upload a lung scan to get instant disease diagnosis.</p>", unsafe_allow_html=True)
 
 
 # --- Sidebar Content ---
@@ -89,23 +83,23 @@ st.sidebar.markdown(
     """
     1.  **Upload Image:** Use the file uploader below to select a `.png`, `.jpg`, or `.jpeg` image of a maize leaf.
     2.  **View Image:** Your uploaded image will appear in the main area.
-    3.  **Predict:** Click the 'Predict Now' button to get the diagnosis.
-    4.  **Results:** The prediction and confidence will be displayed, along with a health status alert and treatment recommendations.
+    3.  **Predict:** Click the `Diagnose` button to get the diagnosis.
+    4.  **Results:** The prediction and confidence will be displayed.
     """
 )
 st.sidebar.markdown("---")
-uploaded_file = st.sidebar.file_uploader("Upload Maize Leaf Image", type=["png", "jpg", "jpeg"])
+uploaded_file = st.sidebar.file_uploader("Upload Histopathology Image Scan", type=["png", "jpg", "jpeg"])
 
 
 # --- Main Area Content ---
 if uploaded_file is not None:
     # Display the uploaded image in the main area
-    st.image(uploaded_file, caption='Uploaded Maize Leaf Image', use_container_width=True)
+    st.image(uploaded_file, caption='', use_container_width=True)
 
     # Centralized Predict Button
     col1, col2, col3 = st.columns([1,2,1])
     with col2:
-        predict_button = st.button(label='Predict Now', use_container_width=True)
+        predict_button = st.button(label='Diagnose', use_container_width=True)
 
     # If predict button is clicked, perform prediction and store in session state
     if predict_button:
@@ -123,59 +117,20 @@ if uploaded_file is not None:
 
         st.markdown("---") # Separator for results
 
-        if current_pred == 'Healthy':
-            st.success(f"**Diagnosis: 🌱 {current_pred}**")
-            st.info(f"**Confidence: {current_prob:.4f}**")
+        if current_pred == 'lung_n':
+            st.success(f"**Diagnosis: 🧑‍⚕️ {current_pred}**")
+            st.info(f"**Confidence: {str(round(current_prob.item() * 100)) + "%"}**")
             st.markdown("---")
-            st.markdown("Great news! Your maize leaf appears healthy. Continue with good agricultural practices.")
+            st.markdown("Great news! Your Scan appears healthy.")
         else:
             st.error(f"**Diagnosis: 🚨 {current_pred}**")
-            st.info(f"**Confidence: {current_prob:.4f}**")
-            st.warning("Immediate action might be required. Please consult local agricultural experts for specific treatment plans and recommendations.")
+            st.info(f"**Confidence: {str(round(current_prob * 100)) + "%"}**")
+            st.warning("Immediate action is be required. Please consult histopathological experts treatment plans and recommendations.")
             st.markdown("---")
 
-            if gemini_model: # Only show button if Gemini model was successfully configured
-                st.subheader("🤖 AI-Powered Treatment Recommendations")
-                recommend_button = st.button("Click to see AI-Powered Recommendation")
-
-                # If recommend button is clicked, set session state flag
-                if recommend_button:
-                    st.session_state.gemini_clicked = True
-
-                # Display recommendations if button was clicked previously
-                if st.session_state.gemini_clicked:
-                    prompt = f"""
-                    You are an agricultural expert specializing in maize crops.
-                    The diagnosed disease is: '{current_pred}'.
-
-                    Provide detailed, practical, and comprehensive treatment recommendations for this maize disease.
-                    Include:
-                    1.  **Recommended actions for farmers:** What steps should they take immediately?
-                    2.  **Possible control measures:** Are there cultural practices (e.g., crop rotation, residue management), resistant varieties, or biological controls?
-                    3.  **Chemical treatments (if applicable):** Mention types of fungicides/pesticides if commonly used, but always advise consulting local experts for specific product names and dosages. Prioritize general categories.
-                    4.  **Preventive measures:** How can future outbreaks be reduced?
-                    5.  **Advice on when to consult local experts.**
-
-                    Present the information clearly with bullet points where appropriate.
-                    """
-                    try:
-                        with st.spinner("Generating detailed recommendations..."):
-                            response = gemini_model.generate_content(prompt, stream=False)
-                            treatment_recommendation = response.text
-                            st.markdown(treatment_recommendation)
-                    except Exception as e:
-                        st.error(f"Failed to generate AI recommendations: {e}. Please try again later.")
-                st.markdown("---") # Add separator after recommendations section
-                st.caption("Disclaimer: These recommendations are for informational purposes only and should not replace professional agricultural advice. Always consult local agricultural experts for specific guidance.")
-            else:
-                st.info("AI recommendations are unavailable due to an API configuration issue.")
-
 else:
-    st.info("Please upload an image of a maize leaf to get a diagnosis.")
+    st.info("Please upload a scan to get a diagnosis.")
     # Reset session state if no image is uploaded
     st.session_state.prediction_made = False
     st.session_state.gemini_clicked = False
 
-
-st.markdown("---")
-st.caption("A capstone project by **Arewa Data Science Academy** Fellow. Learn more about this project on [GitHub](https://github.com/Mannienox/Maize_Disease_Prediction_Using_Transfer_Learning_Techniques/tree/main)")
