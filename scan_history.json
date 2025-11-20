@@ -1,0 +1,63 @@
+[
+    {
+        "id": "60df3abc-bce7-4564-ad7c-3c4e05775120",
+        "predicted_class": "lung_n",
+        "probability": 0.9999967813491821,
+        "timestamp": "2025-11-19T11:53:36.241709"
+    },
+    {
+        "id": "3e79da68-aad6-4ef7-b14d-d4d49a379d13",
+        "predicted_class": "lung_aca",
+        "probability": 0.9514044523239136,
+        "timestamp": "2025-11-19T11:58:04.755912"
+    },
+    {
+        "id": "7f424238-d081-4e36-b322-63c90b944a2a",
+        "predicted_class": "lung_n",
+        "probability": 0.9999967813491821,
+        "image_url": "https://placehold.co/600x400/CCCCCC/000000?text=Image+Not+Saved",
+        "timestamp": "2025-11-19T12:28:55.133679"
+    },
+    {
+        "id": "fda417b9-cd49-4511-8ef9-af272d998f82",
+        "predicted_class": "lung_n",
+        "probability": 0.9999967813491821,
+        "image_url": "https://placehold.co/600x400/CCCCCC/000000?text=Image+Not+Saved",
+        "timestamp": "2025-11-19T12:42:04.029924"
+    },
+    {
+        "id": "864675d2-1530-42f7-93f8-e6ef01dfd0eb",
+        "predicted_class": "lung_aca",
+        "probability": 0.9514044523239136,
+        "image_url": "https://placehold.co/600x400/CCCCCC/000000?text=Image+Not+Saved",
+        "timestamp": "2025-11-19T13:19:28.710754"
+    },
+    {
+        "id": "0466f5db-cccf-4ba1-bcbb-d57ff8ae7b12",
+        "predicted_class": "lung_aca",
+        "probability": 0.9514044523239136,
+        "image_url": "https://placehold.co/600x400/CCCCCC/000000?text=Image+Not+Saved",
+        "timestamp": "2025-11-19T13:29:26.812014"
+    },
+    {
+        "id": "18828af3-5406-4311-80fa-4aa07dc4d6e7",
+        "predicted_class": "lung_n",
+        "probability": 0.9999967813491821,
+        "image_url": "https://placehold.co/600x400/CCCCCC/000000?text=Image+Not+Saved",
+        "timestamp": "2025-11-19T13:29:53.940388"
+    },
+    {
+        "id": "b41774e2-d3cd-409b-82cb-29e244c3626d",
+        "predicted_class": "lung_aca",
+        "probability": 0.9514044523239136,
+        "image_url": "https://placehold.co/600x400/CCCCCC/000000?text=Image+Not+Saved",
+        "timestamp": "2025-11-19T13:31:15.918800"
+    },
+    {
+        "id": "b21ae282-9975-4074-a96e-72c4e3cc7228",
+        "predicted_class": "lung_n",
+        "probability": 0.9999967813491821,
+        "image_url": "history\\scan_e81b92add5ce495d9260436021bdba2f.jpeg",
+        "timestamp": "2025-11-19T13:49:53.401824"
+    }
+]
