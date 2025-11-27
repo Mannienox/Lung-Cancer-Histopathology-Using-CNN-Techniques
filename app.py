@@ -167,7 +167,7 @@ REPO_IMAGE_DISPLAY_NAMES = list(REPO_IMAGES.keys())
 def get_inference_transform():
     """Returns the standardized transform pipeline for inference."""
     return transforms.Compose([
-        transforms.Resize(size=(64, 64)), 
+        transforms.Resize(size=(128,128)), 
         transforms.ToTensor()          
     ])
 
